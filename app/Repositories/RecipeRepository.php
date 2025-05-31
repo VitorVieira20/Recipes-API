@@ -32,17 +32,6 @@ class RecipeRepository
     {
         $term = strtolower($request->query('q'));
 
-        /* $recipes = Recipe::with('category')
-            ->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
-            ->orWhereHas(
-                'category',
-                fn($q) =>
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
-            )
-            ->orWhereRaw('LOWER(JSON_EXTRACT(ingredients, "$[*]")) LIKE ?', ["%{$term}%"])
-            ->get(); */
-
-
         return Recipe::with('category')
             ->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
             ->orWhereHas(
@@ -50,8 +39,19 @@ class RecipeRepository
                 fn($q) =>
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
             )
-            ->orWhereRaw('ingredients::text ILIKE ?', ["%{$term}%"])
+            ->orWhereRaw('LOWER(JSON_EXTRACT(ingredients, "$[*]")) LIKE ?', ["%{$term}%"])
             ->get();
+
+
+        /* return Recipe::with('category')
+            ->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
+            ->orWhereHas(
+                'category',
+                fn($q) =>
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
+            )
+            ->orWhereRaw('ingredients::text ILIKE ?', ["%{$term}%"])
+            ->get(); */
     }
 
     // Create Recipe

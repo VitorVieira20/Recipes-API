@@ -18,7 +18,7 @@ class RecipeController extends Controller
         $recipes = $this->recipeService->findAll();
 
         if (!$recipes || $recipes->isEmpty()) {
-            return response()->json(['message' => 'No recipes found'], 404);
+            return response()->json(['message' => 'Recipes not found'], 404);
         }
 
         return response()->json($recipes, 200);

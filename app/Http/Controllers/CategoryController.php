@@ -18,7 +18,7 @@ class CategoryController extends Controller
         $categories = $this->categoryService->findAll();
 
         if (!$categories || $categories->isEmpty()) {
-            return response()->json(['message' => 'No categories found'], 404);
+            return response()->json(['message' => 'Categories not found'], 404);
         }
 
         return response()->json($categories, 200);

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Recipe;
+use Illuminate\Support\Facades\DB;
 
 class RecipeRepository
 {
@@ -31,27 +32,23 @@ class RecipeRepository
     public function findBySearchTerm($request)
     {
         $term = strtolower($request->query('q'));
+        $driver = DB::getDriverName(); // 'mysql' ou 'pgsql'
 
-        return Recipe::with('category')
+        $query = Recipe::with('category')
             ->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
             ->orWhereHas(
                 'category',
                 fn($q) =>
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
-            )
-            ->orWhereRaw('LOWER(JSON_EXTRACT(ingredients, "$[*]")) LIKE ?', ["%{$term}%"])
-            ->get();
+            );
 
+        if ($driver === 'mysql') {
+            $query->orWhereRaw('LOWER(JSON_EXTRACT(ingredients, "$[*]")) LIKE ?', ["%{$term}%"]);
+        } elseif ($driver === 'pgsql') {
+            $query->orWhereRaw('ingredients::text ILIKE ?', ["%{$term}%"]);
+        }
 
-        /* return Recipe::with('category')
-            ->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
-            ->orWhereHas(
-                'category',
-                fn($q) =>
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"])
-            )
-            ->orWhereRaw('ingredients::text ILIKE ?', ["%{$term}%"])
-            ->get(); */
+        return $query->get();
     }
 
     // Create Recipe

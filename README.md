@@ -1,61 +1,175 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🍽️ Recipe API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A simple RESTful API built with Laravel for managing recipes and categories. It supports searching, category filtering, and JWT-based authentication for protected actions.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📦 Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- 🔐 JWT Authentication
+- 📄 CRUD for Recipes and Categories
+- 🔎 Search recipes by name, category, or ingredients
+- 🗂️ Filter recipes by category
+- ✅ API Documentation via Swagger
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🔗 Base URL
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```
+http://your-domain.com/api
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Installation
 
-## Laravel Sponsors
+```bash
+git clone https://github.com/VitorVieira20/Recipes-API.git
+cd Recipes-API
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+composer install
+cp .env.example .env
+php artisan key:generate
 
-### Premium Partners
+# Configure your database (.env)
+php artisan migrate
+php artisan serve
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🔐 Authentication
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+All POST, PUT and DELETE requests require authentication via JWT.
 
-## Code of Conduct
+Send your token in the `Authorization` header:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+Authorization: Bearer YOUR_TOKEN
+```
 
-## Security Vulnerabilities
+### 🔧 Configuration
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+In your `.env` file, make sure to define your secret token key used for signing the JWT:
 
-## License
+```env
+API_SECRET_TOKEN=your_secret_key_here
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Ensure your application uses this key for running successfull tests. You can access it in your code with:
+
+```php
+$secret = env('API_SECRET_TOKEN');
+```
+
+---
+
+## 📚 API Endpoints
+
+### 📖 Recipes
+
+#### `GET /api/recipes`
+Returns all recipes.
+
+#### `GET /api/recipes/search?q=term`
+Search for recipes by name, category, or ingredients.
+
+#### `GET /api/recipes/category/{categoryId}`
+Get recipes belonging to a specific category.
+
+#### `GET /api/recipes/{id}`
+Get a specific recipe by ID.
+
+#### `POST /api/recipes` 🔒
+Create a new recipe.
+
+**Request body example:**
+```json
+{
+  "name": "Chocolate Cake",
+  "image": "https://example-image.com",
+  "description": "Some description",
+  "ingredients": ["2 eggs", "1 cup flour", "200g chocolate"],
+  "instructions": "Mix everything and bake.",
+  "category_id": 1,
+}
+```
+
+#### `PUT /api/recipes/{id}` 🔒
+Update a recipe.
+
+**Request body example:**
+```json
+{
+  "name": "Updated Recipe Name",
+  "ingredients": ["New Ingredient 1", "New Ingredient 2"]
+}
+```
+
+#### `DELETE /api/recipes/{id}` 🔒
+Delete a recipe.
+
+---
+
+### 📁 Categories
+
+#### `GET /api/categories`
+List all categories.
+
+#### `POST /api/categories` 🔒
+Create a new category.
+
+**Request body example:**
+```json
+{
+  "name": "Desserts"
+}
+```
+
+#### `PUT /api/categories/{id}` 🔒
+Update a category.
+
+#### `DELETE /api/categories/{id}` 🔒
+Delete a category.
+
+---
+
+## 🧪 Running Tests
+
+```bash
+php artisan test
+```
+
+The tests will automatically adapt based on the DB driver (MySQL or PostgreSQL).
+
+---
+
+## 📘 Swagger Documentation
+
+This project uses OpenAPI annotations. You can generate the docs with:
+
+```bash
+php artisan l5-swagger:generate
+```
+
+Access the documentation at:
+
+```
+http://your-domain.com/api/documentation
+```
+
+---
+
+## ⚙️ Tech Stack
+
+- Laravel
+- PostgreSQL / MySQL
+- JWT Authentication
+- OpenAPI (Swagger) for docs
+
+---
+
+## 📬 License
+
+This project is licensed under the [MIT license](LICENSE).

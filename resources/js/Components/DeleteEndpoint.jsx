@@ -94,7 +94,7 @@ export default function DeleteEndpoint({ route }) {
                 <button
                     onClick={callApi}
                     disabled={route.params?.some(p => p.required && !params[p.name])}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 cursor-pointer"
                 >
                     <Play size={16} /> Enviar DELETE
                 </button>
@@ -103,14 +103,14 @@ export default function DeleteEndpoint({ route }) {
                     <>
                         <button
                             onClick={clearResponse}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition cursor-pointer"
                         >
                             <Trash2 size={16} /> Limpar
                         </button>
 
                         <button
                             onClick={() => setShowResult(!showResult)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
                         >
                             {showResult ? <EyeOff size={16} /> : <Eye size={16} />}
                             {showResult ? "Fechar" : "Abrir"}

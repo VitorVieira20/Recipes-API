@@ -1,8 +1,5 @@
-import { useForm } from "@inertiajs/react";
-import axios from "axios";
 import { useState } from "react";
-import Input from "./Form/Input";
-import ArrayInput from "./Form/ArrayInput";
+import { Trash2, Eye, EyeOff, Play } from "lucide-react";
 
 export default function PutEndpoint({ route }) {
     const [params, setParams] = useState({});
@@ -10,81 +7,82 @@ export default function PutEndpoint({ route }) {
     const [response, setResponse] = useState(null);
     const [showResult, setShowResult] = useState(false);
 
-    // Inicialização dos dados do formulário conforme os campos opcionais do UpdateRecipeRequest
-    const { data, setData } = useForm({
-        name: "",
-        image: "",
-        description: "",
-        ingredients: [""],
-        instructions: [""],
-        category_id: ""
+    const [body, setBody] = useState(() => {
+        const initialBody = {};
+        if (route.bodyParams) {
+            route.bodyParams.forEach((param) => {
+                initialBody[param.name] = param.type === "array" ? [""] : "";
+            });
+        }
+        return initialBody;
     });
 
     const handleParamChange = (key, value) => {
         setParams((prev) => ({ ...prev, [key]: value }));
     };
 
-    const handleArrayChange = (field, index, value) => {
-        const updated = [...data[field]];
-        updated[index] = value;
-        setData(field, updated);
+    const handleBodyChange = (key, value) => {
+        setBody((prev) => ({ ...prev, [key]: value }));
     };
 
-    const addArrayItem = (field) => {
-        setData(field, [...data[field], ""]);
+    const handleArrayChange = (key, index, value) => {
+        const arr = [...(body[key] || [])];
+        arr[index] = value;
+        setBody((prev) => ({ ...prev, [key]: arr }));
     };
 
-    const removeArrayItem = (field, index) => {
-        const updated = data[field].filter((_, i) => i !== index);
-        setData(field, updated);
+    const addArrayItem = (key) => {
+        const arr = [...(body[key] || [])];
+        arr.push("");
+        setBody((prev) => ({ ...prev, [key]: arr }));
     };
 
-    const resolvePathWithParams = () => {
-        let resolvedPath = route.path;
-        if (route.params?.length) {
-            route.params.forEach((param) => {
-                const value = params[param.name] || "";
-                resolvedPath = resolvedPath.replace(`{${param.name}}`, value);
-            });
-        }
-        return resolvedPath;
+    const removeArrayItem = (key, index) => {
+        const arr = [...(body[key] || [])];
+        arr.splice(index, 1);
+        setBody((prev) => ({ ...prev, [key]: arr }));
     };
 
-    // Filtra os campos do body para enviar apenas os que têm valor (só os que o user preencheu)
-    const getFilteredData = () => {
-        const filtered = {};
+    const resolvePath = () => {
+        return route.path.replace(/\{(\w+)\}/g, (_, key) => params[key] || "");
+    };
 
-        Object.entries(data).forEach(([key, value]) => {
+    const cleanBody = (obj) => {
+        const cleaned = {};
+        for (const key in obj) {
+            const value = obj[key];
+
             if (Array.isArray(value)) {
-                // Se array tem ao menos um item não vazio, inclui
-                if (value.length && value.some((v) => v.trim() !== "")) {
-                    filtered[key] = value.filter((v) => v.trim() !== "");
+                const filtered = value.filter((item) => item?.trim?.() !== "");
+                if (filtered.length > 0) {
+                    cleaned[key] = filtered;
                 }
-            } else if (typeof value === "string" && value.trim() !== "") {
-                filtered[key] = value;
+            } else if (
+                (typeof value === "string" && value.trim() !== "") ||
+                typeof value === "number" ||
+                typeof value === "boolean"
+            ) {
+                cleaned[key] = value;
             }
-        });
-
-        return filtered;
+        }
+        return cleaned;
     };
 
     const callApi = async () => {
-        const resolvedPath = resolvePathWithParams();
-
-        axios
-            .put(resolvedPath, getFilteredData(), {
+        setResponse(null);
+        setShowResult(false);
+        try {
+            const res = await axios.put(resolvePath(), cleanBody(body), {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    ...(route.auth && token ? { Authorization: `Bearer ${token}` } : {}),
                 },
-            })
-            .then((response) => {
-                setResponse(response.data);
-                setShowResult(true);
-            })
-            .catch((error) => {
-                setResponse(error.response?.data ?? { error: "Erro desconhecido" });
-                setShowResult(true);
             });
+            setResponse(res.data ?? { success: true });
+        } catch (err) {
+            setResponse(err.response?.data ?? { error: "Erro desconhecido" });
+        } finally {
+            setShowResult(true);
+        }
     };
 
     const clearResponse = () => {
@@ -92,123 +90,160 @@ export default function PutEndpoint({ route }) {
         setShowResult(false);
     };
 
+    const isDisabled =
+        route.params?.some((p) => p.required && !params[p.name]) ||
+        route.bodyParams?.some((p) =>
+            p.required
+                ? p.type === "array"
+                    ? !body[p.name]?.length || body[p.name].some((i) => !i)
+                    : !body[p.name]
+                : false
+        );
+
     return (
-        <div className="border border-gray-300 rounded-lg p-5 shadow-sm bg-white mb-8">
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-sm px-2 py-1 rounded font-semibold bg-yellow-100 text-yellow-800">
+        <div className="border border-gray-300 rounded-3xl p-6 shadow-lg bg-white mb-8 space-y-6 max-w-3xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold bg-yellow-200 text-yellow-900 rounded-full px-3 py-1 tracking-wide">
                     PUT
                 </span>
-                {route.auth && (
-                    <input
-                        type="text"
-                        placeholder="Bearer Token"
-                        value={token}
-                        onChange={(e) => setToken(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm w-72"
-                    />
-                )}
+                <code className="text-gray-600 text-sm font-mono select-all">{route.path}</code>
             </div>
 
-            <p className="text-sm text-gray-600 font-mono">{route.path}</p>
-            <p className="text-gray-800 mt-1 mb-4">{route.description}</p>
+            {/* Description */}
+            <p className="text-gray-800 text-base leading-relaxed">{route.description}</p>
 
-            {route.params?.length > 0 && (
-                <div className="mb-4 space-y-2">
-                    <p className="font-semibold text-sm">Parâmetros na URL:</p>
-                    {route.params.map((param, i) => (
-                        <div key={i} className="flex flex-col text-sm">
-                            <label className="text-gray-700 font-mono">
-                                {param.name} ({param.type}){" "}
-                                {param.required && <span className="text-red-600">*</span>}
-                            </label>
-                            <input
-                                type="text"
-                                value={params[param.name] || ""}
-                                onChange={(e) => handleParamChange(param.name, e.target.value)}
-                                placeholder={param.description}
-                                className="border border-gray-300 rounded px-2 py-1 mt-1"
-                            />
-                        </div>
-                    ))}
+            {/* Auth Token */}
+            {route.auth && (
+                <div>
+                    <label className="block text-sm font-mono text-gray-700 mb-2">Bearer Token</label>
+                    <input
+                        type="text"
+                        value={token}
+                        onChange={(e) => setToken(e.target.value)}
+                        placeholder="Token de autenticação"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                    />
                 </div>
             )}
 
-            <div className="space-y-3">
-                <p className="font-semibold text-sm">Body:</p>
+            {/* URL Params */}
+            {route.params?.length > 0 && (
+                <section className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                    <p className="font-semibold text-sm mb-3">🧩 Parâmetros na URL</p>
+                    <div className="grid gap-4">
+                        {route.params.map((param, i) => (
+                            <div key={i} className="text-sm">
+                                <label className="block font-mono text-gray-700 mb-1">
+                                    {param.name} ({param.type}){" "}
+                                    {param.required && <span className="text-red-600">*</span>}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={param.description}
+                                    value={params[param.name] || ""}
+                                    onChange={(e) => handleParamChange(param.name, e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
-                {/* Campos do body */}
-                <Input
-                    label="Nome"
-                    value={data.name}
-                    onChange={(e) => setData("name", e.target.value)}
-                    placeholder="Máximo 255 caracteres"
-                />
-                <Input
-                    label="Imagem (URL)"
-                    value={data.image}
-                    onChange={(e) => setData("image", e.target.value)}
-                    placeholder="URL válida, máximo 2048 caracteres"
-                />
-                <Input
-                    label="Descrição"
-                    value={data.description}
-                    onChange={(e) => setData("description", e.target.value)}
-                    placeholder="Opcional"
-                />
-                <Input
-                    label="Categoria ID"
-                    value={data.category_id}
-                    onChange={(e) => setData("category_id", e.target.value)}
-                    placeholder="ID válido da categoria"
-                />
+            {/* Body Params */}
+            {route.bodyParams?.length > 0 && (
+                <section className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-5">
+                    <p className="font-semibold text-sm mb-3">📦 Body</p>
+                    {route.bodyParams.map((param, i) => (
+                        <div key={i} className="text-sm">
+                            <label className="block font-mono text-gray-700 mb-2">
+                                {param.name} ({param.type}) {param.required && <span className="text-red-600">*</span>}
+                            </label>
+                            {param.type === "array" ? (
+                                <>
+                                    {(body[param.name] || []).map((item, idx) => (
+                                        <div key={idx} className="flex gap-2 mb-2 items-center">
+                                            <input
+                                                type="text"
+                                                value={item}
+                                                onChange={(e) => handleArrayChange(param.name, idx, e.target.value)}
+                                                placeholder={param.description}
+                                                className="flex-grow border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                                            />
+                                            <button
+                                                onClick={() => removeArrayItem(param.name, idx)}
+                                                type="button"
+                                                className="text-white bg-red-600 rounded-lg px-3 py-1 hover:bg-red-700 transition"
+                                                aria-label={`Remover item ${idx + 1}`}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        onClick={() => addArrayItem(param.name)}
+                                        type="button"
+                                        className="text-white bg-yellow-500 rounded-lg px-4 py-2 hover:bg-yellow-600 transition text-sm"
+                                    >
+                                        + Adicionar item
+                                    </button>
+                                </>
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={body[param.name] || ""}
+                                    onChange={(e) => handleBodyChange(param.name, e.target.value)}
+                                    placeholder={param.description}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                                />
+                            )}
+                        </div>
+                    ))}
+                </section>
+            )}
 
-                <ArrayInput
-                    label="Ingredientes"
-                    items={data.ingredients}
-                    onChange={(i, v) => handleArrayChange("ingredients", i, v)}
-                    onAdd={() => addArrayItem("ingredients")}
-                    onRemove={(i) => removeArrayItem("ingredients", i)}
-                />
-
-                <ArrayInput
-                    label="Instruções"
-                    items={data.instructions}
-                    onChange={(i, v) => handleArrayChange("instructions", i, v)}
-                    onAdd={() => addArrayItem("instructions")}
-                    onRemove={(i) => removeArrayItem("instructions", i)}
-                />
-            </div>
-
-            <div className="mt-5 flex gap-2 flex-wrap">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 mt-1">
                 <button
                     onClick={callApi}
-                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                    disabled={isDisabled}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition ${isDisabled
+                        ? "bg-yellow-400 cursor-not-allowed"
+                        : "bg-yellow-500 hover:bg-yellow-600"
+                        } cursor-pointer`}
                 >
-                    Enviar
+                    <Play size={18} /> Enviar PUT
                 </button>
 
                 {response && (
                     <>
                         <button
                             onClick={clearResponse}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            className="flex items-center gap-2 px-5 py-3 bg-gray-500 rounded-xl text-white hover:bg-gray-600 transition cursor-pointer"
                         >
-                            Limpar
+                            <Trash2 size={18} /> Limpar
                         </button>
+
                         <button
                             onClick={() => setShowResult(!showResult)}
-                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                            className="flex items-center gap-2 px-5 py-3 bg-gray-700 rounded-xl text-white hover:bg-gray-800 transition cursor-pointer"
                         >
-                            {showResult ? "Fechar" : "Ver resposta"}
+                            {showResult ? <EyeOff size={18} /> : <Eye size={18} />}
+                            {showResult ? "Fechar" : "Abrir"}
                         </button>
                     </>
                 )}
             </div>
 
-            {showResult && response && (
-                <pre className="mt-4 bg-gray-100 p-3 rounded text-sm overflow-x-auto max-h-80">
-                    {JSON.stringify(response, null, 2)}
-                </pre>
+            {/* Response Viewer */}
+            {response && showResult && (
+                <section className="mt-6">
+                    <p className="text-gray-700 font-semibold mb-2">🧾 Resposta da API:</p>
+                    <pre className="bg-gray-100 rounded-xl p-4 max-h-64 overflow-auto text-xs font-mono text-gray-800 whitespace-pre-wrap">
+                        {JSON.stringify(response, null, 2)}
+                    </pre>
+                </section>
             )}
         </div>
     );

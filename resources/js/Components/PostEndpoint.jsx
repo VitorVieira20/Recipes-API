@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Trash2, Eye, EyeOff, Play } from "lucide-react";
-import axios from "axios";
 
-export default function PutEndpoint({ route }) {
+export default function PostEndpoint({ route }) {
     const [params, setParams] = useState({});
     const [token, setToken] = useState("");
     const [response, setResponse] = useState(null);
@@ -52,7 +51,7 @@ export default function PutEndpoint({ route }) {
         setResponse(null);
         setShowResult(false);
         try {
-            const res = await axios.put(resolvePath(), body, {
+            const res = await axios.post(resolvePath(), body, {
                 headers: {
                     ...(route.auth && token ? { Authorization: `Bearer ${token}` } : {}),
                 },
@@ -85,7 +84,7 @@ export default function PutEndpoint({ route }) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold bg-green-200 text-green-900 rounded-full px-3 py-1 tracking-wide">
-                    PUT
+                    POST
                 </span>
                 <code className="text-gray-600 text-sm font-mono select-all">{route.path}</code>
             </div>
@@ -191,23 +190,23 @@ export default function PutEndpoint({ route }) {
                     className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition ${isDisabled
                             ? "bg-green-400 cursor-not-allowed"
                             : "bg-green-600 hover:bg-green-700"
-                        }`}
+                        } cursor-pointer`}
                 >
-                    <Play size={18} /> Enviar PUT
+                    <Play size={18} /> Enviar POST
                 </button>
 
                 {response && (
                     <>
                         <button
                             onClick={clearResponse}
-                            className="flex items-center gap-2 px-5 py-3 bg-gray-500 rounded-xl text-white hover:bg-gray-600 transition"
+                            className="flex items-center gap-2 px-5 py-3 bg-gray-500 rounded-xl text-white hover:bg-gray-600 transition cursor-pointer"
                         >
                             <Trash2 size={18} /> Limpar
                         </button>
 
                         <button
                             onClick={() => setShowResult(!showResult)}
-                            className="flex items-center gap-2 px-5 py-3 bg-gray-700 rounded-xl text-white hover:bg-gray-800 transition"
+                            className="flex items-center gap-2 px-5 py-3 bg-gray-700 rounded-xl text-white hover:bg-gray-800 transition cursor-pointer"
                         >
                             {showResult ? <EyeOff size={18} /> : <Eye size={18} />}
                             {showResult ? "Fechar" : "Abrir"}

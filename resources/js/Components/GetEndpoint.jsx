@@ -105,7 +105,7 @@ export default function GetEndpoint({ route }) {
             <div className="flex flex-wrap gap-3 mt-2">
                 <button
                     onClick={callApi}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
                 >
                     <Play size={16} /> Testar API
                 </button>
@@ -114,14 +114,14 @@ export default function GetEndpoint({ route }) {
                     <>
                         <button
                             onClick={clearResult}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition cursor-pointer"
                         >
                             <Trash2 size={16} /> Limpar
                         </button>
 
                         <button
                             onClick={() => setShowResult(!showResult)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition cursor-pointer"
                         >
                             {showResult ? <EyeOff size={16} /> : <Eye size={16} />}
                             {showResult ? 'Fechar' : 'Abrir'}
